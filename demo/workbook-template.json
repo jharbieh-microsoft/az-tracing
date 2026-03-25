@@ -1,0 +1,149 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# Unified Monitoring Demo Dashboard\n\nThis dashboard aggregates data from all monitoring sources:\n- Azure Web App (Application Insights)\n- Azure VM (Perf, Event logs)\n- Data Center VM (Arc-connected, Perf, Event logs)\n- SaaS Integration (GitHub API metrics)"
+      },
+      "customWidth": "100",
+      "name": "Title"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AppRequests\n| where TimeGenerated > ago(1h)\n| summarize RequestCount = count(), AvgDuration = avg(DurationMs), FailureCount = countif(Success == false) by bin(TimeGenerated, 5m)\n| render timechart with (title=\"Web App: Requests & Response Time\")",
+        "size": 0,
+        "timeRange": {
+          "durationMs": 3600000
+        },
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "timechart",
+        "gridSettings": {
+          "rowLimit": 10000
+        },
+        "title": "Web App Performance (Last Hour)",
+        "customWidth": "50",
+        "showExportToExcel": true
+      },
+      "customWidth": "50",
+      "name": "WebAppMetrics"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Perf\n| where Computer in ('vm-azure-demo', 'vm-datadc-demo')\n| where ObjectName == \"Processor\" and CounterName == \"% Processor Time\"\n| summarize AvgCPU = avg(CounterValue) by Computer, bin(TimeGenerated, 5m)\n| render timechart with (title=\"VM CPU Usage\",yMin=0,yMax=100)",
+        "size": 0,
+        "timeRange": {
+          "durationMs": 3600000
+        },
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "timechart",
+        "title": "VM CPU Usage (Last Hour)",
+        "customWidth": "50",
+        "showExportToExcel": true
+      },
+      "customWidth": "50",
+      "name": "VMCPUMetrics"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Perf\n| where Computer in ('vm-azure-demo', 'vm-datadc-demo')\n| where ObjectName == \"Memory\" and CounterName == \"% Committed Bytes In Use\"\n| summarize AvgMemory = avg(CounterValue) by Computer, bin(TimeGenerated, 5m)\n| render timechart with (title=\"VM Memory Usage\",yMin=0,yMax=100)",
+        "size": 0,
+        "timeRange": {
+          "durationMs": 3600000
+        },
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "timechart",
+        "title": "VM Memory Usage (Last Hour)",
+        "customWidth": "50",
+        "showExportToExcel": true
+      },
+      "customWidth": "50",
+      "name": "VMMemoryMetrics"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "GitHubMetrics_CL\n| order by timestamp_t desc\n| project\n    Timestamp = timestamp_t,\n    TotalRepos = repo_count_d,\n    ActiveRepos = active_repos_d,\n    TotalStars = total_stars_d,\n    PublicRepos = public_repos_d,\n    RecentlyUpdated = updated_in_last_week_d\n| take 20",
+        "size": 0,
+        "timeRange": {
+          "durationMs": 3600000
+        },
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table",
+        "gridSettings": {
+          "filter": true,
+          "sortBy": [
+            {
+              "itemKey": "Timestamp",
+              "sortOrder": 2
+            }
+          ]
+        },
+        "tableSettings": {},
+        "title": "GitHub Metrics (Last 20 Collections)",
+        "customWidth": "100",
+        "showExportToExcel": true
+      },
+      "customWidth": "100",
+      "name": "GitHubMetrics"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "union\n  (AppRequests | project Source=\"WebApp\", TimeGenerated = TimeGenerated, Value = DurationMs),\n  (Perf | where Counter contains \"Processor\" | project Source=\"VMs\", TimeGenerated = TimeGenerated, Value = CounterValue)\n| summarize AvgValue = avg(Value) by Source, bin(TimeGenerated, 5m)\n| render barchart with (title=\"Unified Source Comparison\")",
+        "size": 0,
+        "timeRange": {
+          "durationMs": 3600000
+        },
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "barchart",
+        "title": "Unified Data Sources Comparison",
+        "customWidth": "100",
+        "showExportToExcel": true
+      },
+      "customWidth": "100",
+      "name": "UnifiedComparison"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "Event\n| where Computer in ('vm-azure-demo', 'vm-datadc-demo')\n| where EventLevelName != \"Information\"\n| summarize EventCount = count() by Computer, EventLevelName, Source\n| order by EventCount desc\n| take 50",
+        "size": 0,
+        "timeRange": {
+          "durationMs": 3600000
+        },
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table",
+        "gridSettings": {
+          "filter": true
+        },
+        "tableSettings": {},
+        "title": "System Events (Warnings & Errors)",
+        "customWidth": "100",
+        "showExportToExcel": true
+      },
+      "customWidth": "100",
+      "name": "SystemEvents"
+    }
+  ],
+  "styleSettings": {
+    "paddingLeft": "5px",
+    "paddingRight": "5px"
+  },
+  "fromTemplateId": "ResourceManagerTemplate"
+}

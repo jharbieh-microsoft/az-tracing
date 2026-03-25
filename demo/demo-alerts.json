@@ -1,0 +1,128 @@
+{
+  "alerts": [
+    {
+      "name": "alert-high-response-time",
+      "description": "Alert when average web app response time exceeds 2 seconds",
+      "source": "Application Insights",
+      "metric": "AppRequests.DurationMs",
+      "condition": "avg(DurationMs) > 2000",
+      "windowSize": "5m",
+      "evaluationFrequency": "1m",
+      "severity": 2,
+      "actions": [
+        {
+          "type": "Email",
+          "recipient": "admin@contoso.com"
+        }
+      ]
+    },
+    {
+      "name": "alert-high-cpu",
+      "description": "Alert when VM CPU usage exceeds 80% for 5 minutes",
+      "source": "Azure Monitor Metrics",
+      "machines": ["vm-azure-demo", "vm-datadc-demo"],
+      "metric": "Processor % Processor Time",
+      "condition": "avg > 80",
+      "windowSize": "5m",
+      "evaluationFrequency": "1m",
+      "severity": 2,
+      "actions": [
+        {
+          "type": "Email",
+          "recipient": "admin@contoso.com"
+        }
+      ]
+    },
+    {
+      "name": "alert-high-memory",
+      "description": "Alert when VM memory usage exceeds 85%",
+      "source": "Azure Monitor Metrics",
+      "machines": ["vm-azure-demo", "vm-datadc-demo"],
+      "metric": "Memory % Committed Bytes In Use",
+      "condition": "avg > 85",
+      "windowSize": "5m",
+      "evaluationFrequency": "1m",
+      "severity": 2,
+      "actions": [
+        {
+          "type": "Email",
+          "recipient": "admin@contoso.com"
+        }
+      ]
+    },
+    {
+      "name": "alert-web-app-failure-rate",
+      "description": "Alert when web app error rate exceeds 5%",
+      "source": "Application Insights",
+      "metric": "AppRequests.FailureCount vs Total",
+      "condition": "(countif(Success == false) / count()) * 100 > 5",
+      "windowSize": "5m",
+      "evaluationFrequency": "1m",
+      "severity": 3,
+      "actions": [
+        {
+          "type": "Email",
+          "recipient": "admin@contoso.com"
+        }
+      ]
+    },
+    {
+      "name": "alert-github-metrics-gap",
+      "description": "Alert if GitHub metrics have not been received in 15 minutes",
+      "source": "Log Analytics (Custom Table)",
+      "metric": "GitHubMetrics_CL",
+      "condition": "LastDataTime < ago(15m)",
+      "windowSize": "15m",
+      "evaluationFrequency": "5m",
+      "severity": 2,
+      "actions": [
+        {
+          "type": "Email",
+          "recipient": "admin@contoso.com"
+        }
+      ]
+    },
+    {
+      "name": "alert-system-error-events",
+      "description": "Alert when critical system errors appear in event log",
+      "source": "Azure Monitor Agent (Event Log)",
+      "machines": ["vm-azure-demo", "vm-datadc-demo"],
+      "condition": "Event where EventID in (7000, 7001, 7010) and EventLevelName == 'Error'",
+      "windowSize": "1m",
+      "evaluationFrequency": "1m",
+      "severity": 1,
+      "actions": [
+        {
+          "type": "Email",
+          "recipient": "admin@contoso.com"
+        },
+        {
+          "type": "SMS",
+          "recipient": "+1-555-000-0000"
+        }
+      ]
+    },
+    {
+      "name": "alert-disk-space-low",
+      "description": "Alert when disk free space is below 10%",
+      "source": "Azure Monitor Metrics",
+      "machines": ["vm-azure-demo", "vm-datadc-demo"],
+      "metric": "PhysicalDisk % Free Space",
+      "condition": "avg < 10",
+      "windowSize": "5m",
+      "evaluationFrequency": "5m",
+      "severity": 2,
+      "actions": [
+        {
+          "type": "Email",
+          "recipient": "admin@contoso.com"
+        }
+      ]
+    }
+  ],
+  "notes": {
+    "deployment": "Deploy using Azure CLI: az monitor metrics alert create --name <alert-name> --resource-group rg-demo-monitoring --scopes <resource-id> --condition <evaluation> --description <description>",
+    "testing": "Generate load using: artillery run load-test.yml",
+    "verification": "Check Log Analytics for: AppRequests, Perf, Event, GitHubMetrics_CL tables"
+  }
+}

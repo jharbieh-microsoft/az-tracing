@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Insights/dataCollectionRules",
+      "apiVersion": "2022-06-01",
+      "name": "dcr-datadc-vm-demo",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "description": "Demo DCR for Data Center VM (Arc-connected) - extended monitoring",
+        "dataSources": {
+          "performanceCounters": [
+            {
+              "name": "fullMonitoring",
+              "streams": ["Microsoft-Perf"],
+              "scheduledTransferPeriod": "PT1M",
+              "counterSpecifiers": [
+                "\\Processor(_Total)\\% Processor Time",
+                "\\Processor(_Total)\\% Privileged Time",
+                "\\Processor(_Total)\\% User Time",
+                "\\Memory\\% Committed Bytes In Use",
+                "\\Memory\\Available MBytes",
+                "\\Memory\\Pages/sec",
+                "\\PhysicalDisk(_Total)\\% Disk Time",
+                "\\PhysicalDisk(_Total)\\Avg. Disk Queue Length",
+                "\\PhysicalDisk(_Total)\\% Free Space",
+                "\\Network Interface(*)\\Bytes Received/sec",
+                "\\Network Interface(*)\\Bytes Sent/sec",
+                "\\Network Interface(*)\\Output Queue Length",
+                "\\TCPv4\\Connections Established",
+                "\\TCPv4\\Connections Reset"
+              ]
+            }
+          ],
+          "windowsEventLogs": [
+            {
+              "name": "detailedEvents",
+              "streams": ["Microsoft-Event"],
+              "scheduledTransferPeriod": "PT5M",
+              "logNames": [
+                "System",
+                "Application",
+                "Security"
+              ],
+              "xPathQueries": [
+                "System!*[System[(EventID=7036 or EventID=7040 or EventID=6009)]]",
+                "Application!*[System[(EventID=1000 or EventID=1001)]]",
+                "Security!*[System[(EventID=4624 or EventID=4625)]]"
+              ]
+            }
+          ],
+          "logFiles": [
+            {
+              "name": "iisLogs",
+              "streams": ["Microsoft-W3CIISLog"],
+              "filePatterns": [
+                "C:\\inetpub\\logs\\LogFiles\\W3SVC*\\*.log"
+              ],
+              "format": "text",
+              "scheduledTransferPeriod": "PT5M"
+            },
+            {
+              "name": "applicationLogs",
+              "streams": ["Microsoft-TextLog"],
+              "filePatterns": [
+                "C:\\logs\\app-*.log"
+              ],
+              "format": "text",
+              "scheduledTransferPeriod": "PT5M"
+            }
+          ]
+        },
+        "destinations": {
+          "logAnalytics": [
+            {
+              "name": "centralWorkspace",
+              "workspaceResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.OperationalInsights/workspaces/law-demotrace-dev')]"
+            }
+          ]
+        },
+        "dataFlows": [
+          {
+            "streams": [
+              "Microsoft-Perf",
+              "Microsoft-Event",
+              "Microsoft-W3CIISLog",
+              "Microsoft-TextLog"
+            ],
+            "destinations": [
+              "centralWorkspace"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "dataCollectionRuleId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Insights/dataCollectionRules', 'dcr-datadc-vm-demo')]"
+    }
+  }
+}

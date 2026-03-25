@@ -1,0 +1,84 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "resources": [
+    {
+      "type": "Microsoft.Insights/dataCollectionRules",
+      "apiVersion": "2022-06-01",
+      "name": "dcr-azure-vm-demo",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "description": "Demo DCR for Azure VM - collects IIS logs, perf counters, and events",
+        "dataSources": {
+          "performanceCounters": [
+            {
+              "name": "cpuMemoryDisk",
+              "streams": ["Microsoft-Perf"],
+              "scheduledTransferPeriod": "PT1M",
+              "counterSpecifiers": [
+                "\\Processor(_Total)\\% Processor Time",
+                "\\Memory\\% Committed Bytes In Use",
+                "\\PhysicalDisk(_Total)\\% Disk Time",
+                "\\PhysicalDisk(_Total)\\Avg. Disk Queue Length",
+                "\\Network Interface(*)\\Bytes Received/sec",
+                "\\Network Interface(*)\\Bytes Sent/sec"
+              ]
+            }
+          ],
+          "windowsEventLogs": [
+            {
+              "name": "systemEvents",
+              "streams": ["Microsoft-Event"],
+              "scheduledTransferPeriod": "PT5M",
+              "logNames": [
+                "System",
+                "Application"
+              ],
+              "xPathQueries": [
+                "System!*[System[(EventID=7036 or EventID=7040)]]",
+                "Application!*[System[(EventID=1000)]]"
+              ]
+            }
+          ],
+          "logFiles": [
+            {
+              "name": "iisLogs",
+              "streams": ["Microsoft-W3CIISLog"],
+              "filePatterns": [
+                "C:\\inetpub\\logs\\LogFiles\\W3SVC*\\*.log"
+              ],
+              "format": "text",
+              "scheduledTransferPeriod": "PT5M"
+            }
+          ]
+        },
+        "destinations": {
+          "logAnalytics": [
+            {
+              "name": "centralWorkspace",
+              "workspaceResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.OperationalInsights/workspaces/law-demotrace-dev')]"
+            }
+          ]
+        },
+        "dataFlows": [
+          {
+            "streams": [
+              "Microsoft-Perf",
+              "Microsoft-Event",
+              "Microsoft-W3CIISLog"
+            ],
+            "destinations": [
+              "centralWorkspace"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "dataCollectionRuleId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Insights/dataCollectionRules', 'dcr-azure-vm-demo')]"
+    }
+  }
+}
