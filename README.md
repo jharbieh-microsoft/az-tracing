@@ -74,7 +74,33 @@ The documentation and assets now support moving from planning to implementation:
 7. Demo resources can be deployed with the automation in [demo/deploy-demo.ps1](demo/deploy-demo.ps1).
 8. Validation, troubleshooting, and next-step references are included in the repo.
 
+## Accomplishments Today (April 8, 2026)
+
+1. Completed IaC compile remediation for Bicep and validated successful build.
+2. Refactored IaC into a modular deployment model:
+  - Foundation
+  - Alerting
+  - Data Collection
+  - Network Observability
+  - Microsoft 365 Ingestion
+3. Updated [bicep/README.md](bicep/README.md) with:
+  - Detailed RBAC requirements for developer and platform deployer personas
+  - Role-assignment and verification commands
+  - Platform handoff template for deployment requests
+  - End-to-end deployment scripts (Bash and PowerShell)
+  - Optional rollback and cleanup scripts (Bash and PowerShell)
+  - RBAC and deployment preflight checklist
+4. Built and documented an interactive simulation app in [simulation-app/README.md](simulation-app/README.md) with progress tracked in [simulation-app/PROGRESS.md](simulation-app/PROGRESS.md).
+
+## Immediate Next Steps
+
+1. Have platform team execute the preflight checklist and RBAC assignment workflow in [bicep/README.md](bicep/README.md).
+2. Run deployment validation (`validate` and `what-if`) for the target environment.
+3. Deploy the modular Bicep stack to the pilot resource group.
+4. Execute smoke tests for alert routing, network monitoring signals, and M365 baseline ingestion.
+5. Begin runbook authoring and operator enablement sessions using the simulation app.
+
 ---
 
 Last Updated: April 8, 2026
-Version: 1.1.0
+Version: 1.1.1

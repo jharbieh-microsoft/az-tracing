@@ -276,10 +276,35 @@ Use a phased rollout to reduce risk and validate observability value early:
 ## Recommended Immediate Next Actions
 
 1. Confirm pilot application and pilot VM/on-premises targets.
-2. Use the existing Bicep and demo assets to validate the foundation deployment path.
+2. Use the modular Bicep deployment in [bicep/main.bicep](bicep/main.bicep) to validate the foundation deployment path.
 3. Create the platform backlog tickets for Phase 1 and Phase 2 onboarding work.
 4. Schedule a foundation design review with security and operations.
 5. Start Phase 1 implementation using the repository assets as the baseline.
+
+## IaC Remediation Status
+
+- [x] Step 1 completed: fixed Bicep compile and schema issues so the deployment template builds successfully.
+- [x] Step 2 completed: split infrastructure into modules (foundation, alerting, data-collection, network-observability, m365-ingestion) with [bicep/main.bicep](bicep/main.bicep) as orchestrator.
+
+## Tasks Completed Today (April 8, 2026)
+
+- [x] Refactored monolithic Bicep template into module-based architecture.
+- [x] Added foundational modules for alerting, data collection, network observability, and M365 ingestion baselines.
+- [x] Updated deployment documentation to include RBAC roles, role verification procedures, and platform handoff template.
+- [x] Added deployment automation command sets (Bash and PowerShell).
+- [x] Added optional rollback and cleanup procedures.
+- [x] Added RBAC and deployment preflight checklist for platform execution readiness.
+
+## Next Task Backlog (Execution Order)
+
+1. Run RBAC preflight checks and confirm deployer principal access at target scope.
+2. Execute `az deployment group validate` and `what-if` for target environment parameters.
+3. Deploy modular IaC to pilot resource group.
+4. Configure Action Group receivers (email/SMS/webhook/ITSM) and test end-to-end delivery.
+5. Associate DCRs to pilot VM and Arc targets.
+6. Replace baseline Connection Monitor placeholder endpoints with real production-relevant paths.
+7. Enable M365 connector + Entra diagnostic settings and validate `M365ServiceHealth_CL` ingestion.
+8. Run cross-workload alert validation (HTTP, VM, Arc, network, SaaS, M365).
 
 ## Roadmap: Remaining Work
 
