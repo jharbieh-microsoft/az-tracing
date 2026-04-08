@@ -39,3 +39,4 @@ This repository contains architecture and planning documentation for an Azure-ba
 - `/bicep-validate-and-whatif` validates and previews Bicep changes before deployment.
 - `/rbac-principal-verification` checks principal role assignments at deployment scope.
 - `/docs-implementation-sync` keeps `README.md`, `REQUIREMENTS.md`, and `IMPLEMENTATION_PLAN.md` aligned.
+- `/generate-pdf-file` creates PDF exports from markdown, text, and HTML source content.

@@ -15,3 +15,7 @@ This repository includes custom Copilot skills tailored to Azure monitoring arch
 3. `/docs-implementation-sync`
    - Keep `README.md`, `REQUIREMENTS.md`, and `IMPLEMENTATION_PLAN.md` aligned after technical changes.
    - See [docs-implementation-sync/SKILL.md](docs-implementation-sync/SKILL.md).
+
+4. `/generate-pdf-file`
+   - Generate PDF files from markdown, text, or HTML inputs for reports and handoff artifacts.
+   - See [generate-pdf-file/SKILL.md](generate-pdf-file/SKILL.md).
