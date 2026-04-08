@@ -32,3 +32,10 @@ This repository contains architecture and planning documentation for an Azure-ba
 - Ensure links resolve to existing files in the workspace.
 - Ensure Mermaid blocks are syntactically valid.
 - Ensure new docs are referenced from REQUIREMENTS.md when they are core artifacts.
+
+## Custom Skills
+
+- Use custom skills in `.github/skills/` for repeatable workflows.
+- `/bicep-validate-and-whatif` validates and previews Bicep changes before deployment.
+- `/rbac-principal-verification` checks principal role assignments at deployment scope.
+- `/docs-implementation-sync` keeps `README.md`, `REQUIREMENTS.md`, and `IMPLEMENTATION_PLAN.md` aligned.
