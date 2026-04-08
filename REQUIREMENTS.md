@@ -12,3 +12,8 @@ This repository now includes the core architecture, implementation guidance, dep
 - [SaaS Integration and Monitoring](SAAS_INTEGRATION.md) — Patterns and implementation guides for external SaaS applications
 - [Demo Solution and Walkthrough](DEMO_SOLUTION.md) — End-to-end demonstration for Web App, Azure VM, Data Center VM, and SaaS monitoring
 - [Bicep Deployment Module](bicep/README.md) — Infrastructure as Code for the monitoring foundation
+- [Network Observability](NETWORK_OBSERVABILITY.md) — Connection Monitor, Network Watcher, NSG flow logs, and network alerting
+- [Microsoft 365 Monitoring](M365_MONITORING.md) — Centralizing M365 service health, Entra ID, and usage telemetry into Log Analytics
+- [Alerting and Notification Design](ALERTING_NOTIFICATIONS.md) — Alert catalog, severity model, Action Group routing matrix, and suppression guidance
+- [Monitoring Simulation Web App](simulation-app/README.md) — Live interactive visualization of topology, incidents, alerts, and notification routing
+- [Simulation Progress Tracker](simulation-app/PROGRESS.md) — Build status and implementation checkpoints for the simulation app

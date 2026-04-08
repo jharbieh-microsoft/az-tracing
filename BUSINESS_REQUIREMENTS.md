@@ -2,7 +2,11 @@
 
 ## Objective
 
-Build a centralized monitoring system on Azure for internal and external applications.
+Build a centralized monitoring and notification system on Azure for internal and external applications. 
+
+- Internal applications are defined as those in data center or inside of the corporate network including those applications in the corporate Azure tenant and Microsoft 365. 
+
+- External applications are defined as those outside of the corporate network, including third-party SaaS applications and public-facing services.
 
 ## Scope
 

@@ -13,7 +13,11 @@ The project has progressed beyond planning-only status. The repository now inclu
 3. Detailed onboarding guidance for hybrid servers in [DATA_CENTER_MONITORING.md](DATA_CENTER_MONITORING.md).
 4. Detailed SaaS ingestion guidance in [SAAS_INTEGRATION.md](SAAS_INTEGRATION.md).
 5. A unified ingestion architecture in [INGESTION_PIPELINE.md](INGESTION_PIPELINE.md).
-6. A runnable demo package in [DEMO_SOLUTION.md](DEMO_SOLUTION.md) and the [demo](demo) folder, including deployment automation, validation assets, and troubleshooting guidance.
+6. A network observability implementation guide in [NETWORK_OBSERVABILITY.md](NETWORK_OBSERVABILITY.md) covering Connection Monitor, Network Watcher, NSG flow logs, and alert rules.
+7. A Microsoft 365 monitoring guide in [M365_MONITORING.md](M365_MONITORING.md) covering service health, Entra ID signals, and usage telemetry.
+8. A consolidated alerting and notification design in [ALERTING_NOTIFICATIONS.md](ALERTING_NOTIFICATIONS.md) covering the full alert catalog, severity model, Action Group routing, and suppression guidance.
+9. A live interactive simulation application in [simulation-app/README.md](simulation-app/README.md) for visualizing topology health, incident scenarios, alerts, and notification routing behavior.
+10. A runnable demo package in [DEMO_SOLUTION.md](DEMO_SOLUTION.md) and the [demo](demo) folder, including deployment automation, validation assets, and troubleshooting guidance.
 
 This implementation plan therefore focuses on production rollout sequencing, validation gates, and operationalization of assets that are already defined in the repository.
 
@@ -146,19 +150,23 @@ Use a phased rollout to reduce risk and validate observability value early:
 ### Tasks
 
 - Enable available SaaS connectors and implement API ingestion where needed.
-- Configure Network Watcher and Connection Monitor for critical paths.
+- Configure Network Watcher and Connection Monitor for critical paths using test group templates in [NETWORK_OBSERVABILITY.md](NETWORK_OBSERVABILITY.md).
 - Define network SLO indicators (latency, availability, packet loss).
+- Enable Microsoft 365 connector (OfficeActivity) and Entra ID diagnostic settings following [M365_MONITORING.md](M365_MONITORING.md).
+- Deploy Azure Function for M365 service health polling.
 
 ### Deliverables
 
 - SaaS telemetry pipelines
-- Network observability dashboards
+- Network observability dashboards and Connection Monitor test groups
 - Network threshold definitions
+- M365 service health, Entra ID sign-in, and audit log ingestion active
 - Selected connector, Function, or webhook implementation pattern documented per SaaS source
 
 ### Exit Criteria
 
 - Critical SaaS and network paths are represented in dashboards and alerts.
+- M365ServiceHealth_CL table is receiving data and at least one M365 alert rule is active.
 
 ## Phase 5: Dashboards and Alerting (Weeks 5-7)
 
@@ -169,20 +177,23 @@ Use a phased rollout to reduce risk and validate observability value early:
 ### Tasks
 
 - Build role-based dashboards in Azure Workbooks and/or Managed Grafana.
-- Implement metric and log query alerts for agreed service indicators.
-- Configure Action Groups (email, SMS, webhooks, Logic Apps, ITSM).
-- Tune initial thresholds and suppression settings to reduce alert noise.
+- Implement alert rules from the catalog in [ALERTING_NOTIFICATIONS.md](ALERTING_NOTIFICATIONS.md) for all active workload types.
+- Provision Action Groups per the routing matrix in [ALERTING_NOTIFICATIONS.md](ALERTING_NOTIFICATIONS.md) (ag-oncall-critical, ag-ops-medium, ag-review-low, ag-itsm, ag-security).
+- Configure suppression rules for scheduled maintenance windows.
+- Tune initial thresholds; apply dynamic thresholds to variable workloads.
 
 ### Deliverables
 
 - Role-specific operational dashboards
-- Alert catalog with severity mapping and ownership
-- Notification routing matrix
+- Alert catalog implemented and tested across all workload types (HTTP, VM, Arc, network, SaaS, M365)
+- Action Groups provisioned and validated with test notifications
+- Notification routing matrix applied and reviewed by security and operations teams
 - Validation workbook and initial alert templates adapted from the demo assets where applicable
 
 ### Exit Criteria
 
 - Alert tests pass for all severity levels and routing targets.
+- All Action Groups deliver test notifications to configured channels.
 
 ## Phase 6: Hardening and Production Rollout (Weeks 7-8)
 
@@ -253,6 +264,11 @@ Use a phased rollout to reduce risk and validate observability value early:
 - [INGESTION_PIPELINE.md](INGESTION_PIPELINE.md) for workload-to-ingestion mapping
 - [DATA_CENTER_MONITORING.md](DATA_CENTER_MONITORING.md) for Azure Arc and Azure Monitor Agent onboarding
 - [SAAS_INTEGRATION.md](SAAS_INTEGRATION.md) for connector, API polling, and webhook patterns
+- [NETWORK_OBSERVABILITY.md](NETWORK_OBSERVABILITY.md) for Connection Monitor setup, KQL queries, and network alert rules
+- [M365_MONITORING.md](M365_MONITORING.md) for Microsoft 365 ingestion patterns and alert rules
+- [ALERTING_NOTIFICATIONS.md](ALERTING_NOTIFICATIONS.md) for the full alert catalog, Action Group definitions, severity model, and routing matrix
+- [simulation-app/README.md](simulation-app/README.md) for interactive simulation setup and scenario coverage
+- [simulation-app/PROGRESS.md](simulation-app/PROGRESS.md) for simulation build checkpoints and completion status
 - [DEMO_SOLUTION.md](DEMO_SOLUTION.md) for validation queries and end-to-end reference flow
 - [demo/deploy-demo.ps1](demo/deploy-demo.ps1) for rapid environment validation before production rollout
 - [demo/TROUBLESHOOTING.md](demo/TROUBLESHOOTING.md) for common ingestion and agent diagnostics
@@ -264,3 +280,31 @@ Use a phased rollout to reduce risk and validate observability value early:
 3. Create the platform backlog tickets for Phase 1 and Phase 2 onboarding work.
 4. Schedule a foundation design review with security and operations.
 5. Start Phase 1 implementation using the repository assets as the baseline.
+
+## Roadmap: Remaining Work
+
+With the three gap-filling documents now in place, the following work remains before production readiness:
+
+### Implementation
+
+- Deploy Connection Monitor test groups and validate latency/loss alerts per [NETWORK_OBSERVABILITY.md](NETWORK_OBSERVABILITY.md)
+- Enable Microsoft 365 native connector and Entra ID diagnostic settings per [M365_MONITORING.md](M365_MONITORING.md)
+- Deploy and test the M365 service health Azure Function
+- Provision all Action Groups from [ALERTING_NOTIFICATIONS.md](ALERTING_NOTIFICATIONS.md) and validate end-to-end notification routing
+- Implement and tune alert rules for all workload types (HTTP, VM, Arc, network, SaaS, M365)
+- Configure suppression rules and maintenance windows
+
+### Validation
+
+- Run end-to-end alert firing and routing tests across all severity levels
+- Confirm all workload types in scope report telemetry to the centralized workspace
+- Validate Workbook dashboards reflect service health KPIs across all workload types
+- Review and approve notification routing matrix with security and operations teams
+- Run simulation scenario walkthroughs with stakeholders to validate incident understanding and response expectations
+
+### Operationalization
+
+- Author runbooks for VM resource exhaustion and HTTP degradation (referenced in [ALERTING_NOTIFICATIONS.md](ALERTING_NOTIFICATIONS.md) but not yet created)
+- Complete handover training for operations and on-call teams
+- Use the simulation app in enablement sessions for operations, security, and platform teams
+- Execute production sign-off against success criteria in [BUSINESS_REQUIREMENTS.md](BUSINESS_REQUIREMENTS.md)

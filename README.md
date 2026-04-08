@@ -10,6 +10,10 @@ The repository now includes:
 - A production-oriented Bicep monitoring foundation module
 - Detailed guidance for SaaS monitoring and on-premises server onboarding
 - A unified ingestion pipeline design across all supported source types
+- Network observability implementation guide covering Connection Monitor, Network Watcher, and NSG flow logs
+- Microsoft 365 monitoring guide covering service health, Entra ID signals, and usage telemetry
+- Consolidated alerting and notification design with a full alert catalog, severity model, and routing matrix
+- A live interactive simulation web app for visualizing monitoring and notification behavior
 - A complete demo package for four monitored scenarios:
   - Web App on Azure
   - Azure Virtual Machine
@@ -35,6 +39,11 @@ The repository now includes:
 - [INGESTION_PIPELINE.md](INGESTION_PIPELINE.md) — Unified ingestion methods and technology guidance
 - [DATA_CENTER_MONITORING.md](DATA_CENTER_MONITORING.md) — Azure Arc and Azure Monitor Agent guidance
 - [SAAS_INTEGRATION.md](SAAS_INTEGRATION.md) — SaaS monitoring patterns and examples
+- [NETWORK_OBSERVABILITY.md](NETWORK_OBSERVABILITY.md) — Connection Monitor, Network Watcher, NSG flow logs, and network alerting
+- [M365_MONITORING.md](M365_MONITORING.md) — Microsoft 365 service health, Entra ID, and usage telemetry ingestion
+- [ALERTING_NOTIFICATIONS.md](ALERTING_NOTIFICATIONS.md) — Alert catalog, severity model, Action Group routing matrix, and suppression guidance
+- [simulation-app/README.md](simulation-app/README.md) — Interactive simulation app overview and local run guide
+- [simulation-app/PROGRESS.md](simulation-app/PROGRESS.md) — Progress tracking for simulation app implementation
 - [DEMO_SOLUTION.md](DEMO_SOLUTION.md) — Demo walkthrough and validation queries
 - [bicep/README.md](bicep/README.md) — Monitoring foundation module documentation
 - [demo/DEPLOYMENT_REFERENCE.md](demo/DEPLOYMENT_REFERENCE.md) — Fast-start deployment reference
@@ -58,10 +67,14 @@ The documentation and assets now support moving from planning to implementation:
 
 1. Monitoring foundation can be deployed with Bicep.
 2. SaaS, Azure-hosted, and data center sources have documented ingestion patterns.
-3. Demo resources can be deployed with the automation in [demo/deploy-demo.ps1](demo/deploy-demo.ps1).
-4. Validation, troubleshooting, and next-step references are included in the repo.
+3. Network observability paths are fully defined with Connection Monitor test group templates, KQL queries, and alert rules.
+4. Microsoft 365 is covered as an internal workload with four integration patterns including service health polling, Entra ID signals, and Teams usage.
+5. A consolidated alerting and notification design is in place with a severity model, full alert catalog across all workload types, and a notification routing matrix.
+6. A live interactive simulation app is available for scenario-driven visualization of incidents, alerts, and routing behavior.
+7. Demo resources can be deployed with the automation in [demo/deploy-demo.ps1](demo/deploy-demo.ps1).
+8. Validation, troubleshooting, and next-step references are included in the repo.
 
 ---
 
-Last Updated: March 25, 2026
-Version: 1.0.0
+Last Updated: April 8, 2026
+Version: 1.1.0
