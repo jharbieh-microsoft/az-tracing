@@ -1,0 +1,10 @@
+# GitHub Copilot session tracking
+.copilot-tracking/
+
+# OS files
+.DS_Store
+
+# Editor directories
+.vscode/*
+!.vscode/extensions.json
+.idea
