@@ -17,3 +17,4 @@ This repository now includes the core architecture, implementation guidance, dep
 - [Alerting and Notification Design](ALERTING_NOTIFICATIONS.md) — Alert catalog, severity model, Action Group routing matrix, and suppression guidance
 - [Monitoring Simulation Web App](simulation-app/README.md) — Live interactive visualization of topology, incidents, alerts, and notification routing
 - [Simulation Progress Tracker](simulation-app/PROGRESS.md) — Build status and implementation checkpoints for the simulation app
+- [Agentic and AI-Driven SDLC](AGENTIC_SDLC.md) — Mapping of traditional SDLC stages to agentic and AI-driven equivalents using GitHub and Azure, with configuration recommendations
