@@ -13,8 +13,8 @@ flowchart TD
     C --> D[Code Review & Security\nCopilot PR Summaries + GHAS + CodeQL]
     D --> E[Testing\nCopilot Test Generation + Azure Load Testing]
     E --> F[CI/CD & Deployment\nGitHub Actions + Azure Pipelines]
-    F --> G[Operations & Monitoring\nAzure Monitor + Copilot in Azure]
-    G --> H[Incident Response\nAzure AI + GitHub Issues Automation]
+    F --> G[Operations & Monitoring\nAzure Monitor + Azure SRE Agent + Copilot in Azure]
+    G --> H[Incident Response\nAzure SRE Agent + Azure AI + GitHub Issues Automation]
     H --> A
 
     subgraph GitHub Platform
@@ -223,19 +223,31 @@ Operations teams react to alerts; dashboards are manually maintained; runbooks a
 
 **Azure tooling:**
 - **Azure Monitor** (Log Analytics Workspace, Application Insights, Azure Monitor Agent) provides the observability foundation — already detailed in [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md).
-- **Microsoft Copilot in Azure** (preview) allows natural-language KQL query generation, resource diagnostics, and cost analysis directly in the Azure portal.
+- **Azure SRE Agent** is a fully managed AI-driven site reliability engineering agent that autonomously monitors Azure resources, correlates telemetry, investigates anomalies, and executes remediation actions. It operates in three configurable autonomy modes:
+  - **Read-only:** queries logs, metrics, and topology; surfaces findings to the on-call team.
+  - **Review (human-in-the-loop):** proposes a remediation action and waits for engineer approval before executing.
+  - **Autonomous:** investigates and remediates without human intervention, within defined RBAC guardrails.
+  - Key capabilities:
+    - **Data correlation:** automatically queries Azure Monitor, Application Insights, Log Analytics, and resource topology to assemble incident context.
+    - **Root cause analysis:** uses LLM reasoning to correlate logs, metrics, and recent deployment changes into validated root cause hypotheses.
+    - **Runbook-aware remediation:** learns from past incidents and organizational runbooks, improving resolution quality over time.
+    - **ITSM and collaboration integrations:** connects to PagerDuty, ServiceNow, and Microsoft Teams for notification, ticket updates, and shareable investigation threads.
+    - **Audit trail:** every action and decision is logged for compliance and postmortem review.
+- **Microsoft Copilot in Azure** allows natural-language KQL query generation, resource diagnostics, and cost analysis directly in the Azure portal.
 - **Azure Monitor Alerts** with **Azure Logic Apps** or **Azure Functions** can trigger autonomous remediation agents:
   - High CPU alert → agent scales out App Service plan automatically.
   - Failed health probe → agent restarts the container and posts a GitHub Issue.
   - Disk space critical → agent cleans up log archives and posts a summary.
-- **Azure AI Agent Service** can host an operations agent that interprets alert context, queries runbooks, selects a remediation action, and executes it with audit logging.
+- **Azure AI Agent Service** can host custom operations agents for domain-specific scenarios not covered by Azure SRE Agent.
 - **Azure Managed Grafana** dashboards can be version-controlled in the repository and deployed via CI/CD.
 
 **Recommended configuration steps:**
-1. Enable **Copilot in Azure** for your subscription (preview feature in Azure portal settings).
-2. Create an Azure Logic App triggered by Azure Monitor Action Groups that posts structured alert summaries as GitHub Issues labeled `ops-incident`.
-3. Deploy an Azure Function (triggered by a specific alert rule) that auto-scales or restarts resources and logs the action to Log Analytics.
-4. Store all Grafana dashboard JSON in `grafana/dashboards/` and deploy via the `grafana-dashboard-deploy` step in GitHub Actions on merge to `main`.
+1. Enable **Azure SRE Agent** for your subscription via the Azure portal (`Azure SRE Agent → Create`). Configure the target scope (subscription or resource group), connect to your Log Analytics Workspace, and set the initial autonomy mode to **Review** to build trust before enabling full autonomy.
+2. Grant the SRE Agent's managed identity the `Monitoring Reader` and `Log Analytics Reader` roles on the monitored scope, and optionally `Contributor` scoped to the resource group for remediation actions.
+3. Connect Azure SRE Agent to your incident management platform (PagerDuty or ServiceNow) and to Microsoft Teams for investigation threads.
+4. Enable **Copilot in Azure** for your subscription (preview feature in Azure portal settings).
+5. Create an Azure Logic App triggered by Azure Monitor Action Groups that posts structured alert summaries as GitHub Issues labeled `ops-incident`.
+6. Store all Grafana dashboard JSON in `grafana/dashboards/` and deploy via the `grafana-dashboard-deploy` step in GitHub Actions on merge to `main`.
 
 ---
 
@@ -252,6 +264,13 @@ Incidents are managed in separate tools; learnings are rarely fed back to the de
 - Root-cause findings are automatically converted to GitHub Issues labeled `reliability-improvement` and placed in the next sprint.
 
 **Azure tooling:**
+- **Azure SRE Agent** drives autonomous incident investigation and resolution. When an Azure Monitor alert fires, the agent:
+  1. Acknowledges the incident and begins automated data correlation across logs, metrics, topology, and recent deployments.
+  2. Forms root cause hypotheses using LLM reasoning and validates each against observability evidence.
+  3. Generates a structured investigation summary with links to the relevant queries.
+  4. Proposes or executes a remediation action (scale, restart, rollback) depending on the configured autonomy mode.
+  5. Posts the investigation thread to Microsoft Teams and updates the ITSM ticket.
+  6. Stores a resolution record in its operational memory to improve future responses.
 - **Azure Monitor Workbooks** generate post-incident timelines from Log Analytics queries.
 - **Azure AI Foundry** hosts a postmortem-drafting agent that ingests alert history, deployment logs, and monitoring data to produce a structured RCA report.
 - **Azure Service Health** alerts feed into the same GitHub Issue automation to capture platform-level incidents alongside application incidents.
@@ -266,20 +285,172 @@ Incidents are managed in separate tools; learnings are rarely fed back to the de
 
 ---
 
-## GitHub Configuration Checklist
+## GitHub.com Configuration for Agentic SDLC
 
-| Area | Setting | Recommendation |
-|------|---------|----------------|
-| Copilot | Copilot for Business/Enterprise | Enable for all developers; configure `copilot-instructions.md` per repo |
-| Copilot Coding Agent | Copilot Tasks | Enable in org settings; restrict to non-production branches |
-| Advanced Security | GHAS | Enable CodeQL, Secret Scanning with push protection, Dependabot |
-| Branch Protection | `main` / `prod` | Require: Copilot review, CodeQL passing, 1 human approval, no force-push |
-| Environments | `staging`, `production` | Required reviewers, deployment timer, OIDC credential binding |
-| Actions | Workflow permissions | Read-only by default; explicitly grant write only where needed |
-| Actions | Allowed actions | Restrict to verified and org-owned actions |
-| Dependabot | Auto-merge | Enable for patch updates with passing CI |
-| Repository | Copilot Instructions | `.github/copilot-instructions.md` with project coding standards |
-| Repository | Issue Templates | Structured templates for `bug`, `feature`, `ops-incident`, `reliability-improvement` |
+This section provides step-by-step guidance for every GitHub.com setting that enables the agentic SDLC described above. Settings are grouped by scope: organization, repository, and team.
+
+### Organization-Level Settings
+
+All settings below are at `https://github.com/organizations/<org>/settings`.
+
+#### 1. Enable GitHub Copilot
+
+1. Go to `Settings → Copilot → Overview` and click **Enable Copilot**.
+2. Under `Settings → Copilot → Policies`:
+   - Set **Suggestions matching public code** to `Blocked` for regulated environments.
+   - Enable **Copilot in GitHub.com** (web interface completions and chat).
+   - Enable **Copilot in the CLI** for terminal-based developer assistance.
+3. Under `Settings → Copilot → Access`, assign licenses:
+   - Select **All members** (recommended) or assign by team.
+4. Under `Settings → Copilot → Coding agent`:
+   - Enable **Copilot coding agent** to allow Copilot to autonomously implement GitHub Issues and open pull requests.
+   - Set the **Firewall policy** (allowlist of external hosts the coding agent may contact).
+
+#### 2. Enable GitHub Advanced Security (GHAS)
+
+1. Go to `Settings → Advanced Security → GitHub Advanced Security` and click **Enable all**.
+2. Under `Settings → Code security → Configurations`, create a new security configuration:
+   - Enable **Dependency graph**.
+   - Enable **Dependabot alerts** and **Dependabot security updates**.
+   - Enable **Dependabot version updates** (auto-PRs for dependency upgrades).
+   - Enable **Code scanning** with default setup (CodeQL).
+   - Enable **Secret scanning** and turn on **Push protection** (blocks commits that contain secrets).
+   - Enable **AI-assisted auto-fix** for code scanning and dependency alerts.
+3. Apply the configuration to all repositories (or target specific ones) using `Apply to repositories`.
+
+#### 3. Configure Actions Policies
+
+1. Go to `Settings → Actions → General`:
+   - Under **Actions permissions**, select `Allow <org>, and select non-<org>, actions and reusable workflows` (where `<org>` is your GitHub organization name as shown in the GitHub UI) and enable **Allow actions created by GitHub**.
+   - Under **Workflow permissions**, set the default to **Read repository contents and packages permissions** (least privilege).
+   - Enable **Allow GitHub Actions to create and approve pull requests** only if needed by specific workflows.
+2. Go to `Settings → Actions → Runner groups` to create runner groups with appropriate access policies for production deployments.
+
+#### 4. Configure GitHub Models Access
+
+1. Go to `Settings → GitHub Models` and enable access for the organization.
+2. Assign access to teams that will use GitHub Models for prompt engineering or evaluation.
+
+#### 5. Configure Audit Log and Webhooks
+
+1. Go to `Settings → Audit log → Streams` and configure streaming to Azure Monitor or a SIEM for compliance.
+2. Go to `Settings → Webhooks` and add a webhook to the Azure Logic App endpoint that handles alert-to-issue automation.
+
+---
+
+### Repository-Level Settings
+
+All settings below are at `https://github.com/<org>/<repo>/settings`.
+
+#### 6. Branch Protection Rules (or Rulesets)
+
+Prefer **Rulesets** (the modern successor to branch protection rules) for more flexibility and better inheritance.
+
+1. Go to `Settings → Rules → Rulesets` and click **New ruleset → New branch ruleset**.
+2. Set **Target branches** to `main` (and `prod` if applicable).
+3. Enable the following rules:
+   - **Restrict deletions** — prevent branch deletion.
+   - **Require a pull request before merging** — set required approvals to `1` minimum.
+   - **Require review from Code Owners** — ensures domain experts review relevant changes.
+   - **Require status checks to pass** — add: CodeQL analysis, CI workflow, and any required AI checks.
+   - **Require branches to be up to date before merging**.
+   - **Block force pushes**.
+4. Optionally enable **Require Copilot review** (when generally available) as an additional status check.
+
+#### 7. GitHub Environments
+
+1. Go to `Settings → Environments` and create the following environments:
+
+   **`staging`:**
+   - Add **Required reviewers** (optional for staging; set if desired).
+   - Set **Deployment branches** to `main`.
+   - Add environment secrets/variables: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` (used with OIDC, not stored as long-lived secrets).
+
+   **`production`:**
+   - Add **Required reviewers** (at least 2 named individuals or a team).
+   - Set a **Wait timer** (e.g., 10 minutes) to allow cancellation after staging validation.
+   - Set **Deployment branches** to `main` only.
+   - Add environment variables for production Azure identifiers.
+   - Enable **Prevent self-review** so the PR author cannot approve their own production deployment.
+
+#### 8. Copilot Instructions File
+
+1. Create `.github/copilot-instructions.md` in the repository root.
+2. Include: project language and framework conventions, preferred library choices, architecture patterns to follow, test file requirements, and any domain-specific context the agent needs.
+3. Copilot (IDE, chat, and coding agent) automatically uses this file as persistent context for all interactions in the repository.
+
+#### 9. Custom Copilot Setup Steps (Coding Agent Environment)
+
+1. Create `.github/copilot-setup-steps.yml` to pre-install dependencies and tools in the coding agent's sandbox before it begins work:
+   ```yaml
+   steps:
+     - name: Install dependencies
+       run: npm ci   # or pip install -r requirements.txt, dotnet restore, etc.
+   ```
+2. This ensures the coding agent can run tests and linters to validate its own changes before opening a PR.
+
+#### 10. Issue and PR Templates
+
+1. Create the following templates under `.github/ISSUE_TEMPLATE/`:
+   - `bug_report.yml` — structured bug report with environment, steps to reproduce, expected vs. actual behavior.
+   - `feature_request.yml` — structured feature request with acceptance criteria (used by the coding agent to scope tasks).
+   - `ops_incident.yml` — incident template with severity, impacted service, timeline, and status fields.
+   - `reliability_improvement.yml` — post-incident improvement task with root cause link and proposed fix.
+2. Create `.github/pull_request_template.md` with: summary, testing notes, deployment checklist, and a link to the related issue.
+
+#### 11. CODEOWNERS
+
+1. Create `.github/CODEOWNERS` to map file paths to responsible teams. Replace `<org>` with your GitHub organization slug:
+   ```
+   # Infrastructure as Code
+   /bicep/   @<org>/platform-team
+   # Application source
+   /src/     @<org>/app-team
+   # Documentation
+   *.md      @<org>/architecture-team
+   ```
+2. CODEOWNERS integrates with branch protection to require targeted reviews and is used by Copilot to suggest reviewers automatically.
+
+#### 12. Dependabot Configuration
+
+1. Create `.github/dependabot.yml`:
+   ```yaml
+   version: 2
+   updates:
+     - package-ecosystem: "npm"   # or pip, nuget, docker, github-actions, etc.
+       directory: "/"
+       schedule:
+         interval: "weekly"
+       open-pull-requests-limit: 10
+     - package-ecosystem: "github-actions"
+       directory: "/"
+       schedule:
+         interval: "weekly"
+   ```
+2. In repository settings, enable **Dependabot auto-merge** for patch-level updates that pass all required status checks.
+
+---
+
+### Team and Access Settings
+
+#### 13. Teams and Permissions
+
+1. Create GitHub Teams that mirror your operational model:
+   - `platform-team` — manages infrastructure, IaC, and pipelines.
+   - `app-team` — owns application code and services.
+   - `security-team` — reviews security alerts and GHAS findings.
+   - `ops-team` — responds to `ops-incident` issues and manages runbooks.
+2. Assign teams to repositories with the appropriate permission level (`Write`, `Maintain`, or `Admin`).
+3. Configure team-level Copilot access if scoping licenses by team.
+
+#### 14. GitHub Projects Automation
+
+1. Create a GitHub Project (board or table view) for sprint tracking.
+2. Configure **built-in automation**:
+   - Issues labeled `spec-complete` → move to **Backlog**.
+   - PRs merged → move linked issue to **Done**.
+   - Issues labeled `ops-incident` → move to **In Progress** sprint column.
+   - Issues labeled `reliability-improvement` → add to **Next Sprint**.
 
 ---
 
@@ -294,6 +465,7 @@ Incidents are managed in separate tools; learnings are rarely fed back to the de
 | Security | Azure Key Vault | All secrets and API keys; RBAC access for Managed Identities |
 | Security | Microsoft Defender for Cloud | Enable Defender for DevOps; connect GitHub organization |
 | Deployment | Azure Deployment Environments | Self-service dev/test environments from GitHub PRs |
+| Operations | Azure SRE Agent | AI-driven incident investigation, root cause analysis, and autonomous remediation; configure autonomy mode (read-only → review → autonomous) and connect to Log Analytics and ITSM |
 | Monitoring | Azure Monitor | Log Analytics Workspace, Application Insights, AMA (see [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)) |
 | Monitoring | Copilot in Azure | Enable for natural-language portal queries and diagnostics |
 | Automation | Azure Logic Apps | Alert-to-issue automation; requirements agent triggering |
@@ -314,8 +486,8 @@ Incidents are managed in separate tools; learnings are rarely fed back to the de
 | Code Review | Human-only review | Copilot PR Summary, Copilot Code Review, CodeQL AI auto-fix, Dependabot |
 | Testing | Manual QA, custom scripts | Copilot test generation, Azure Load Testing, Azure AI Foundry Evaluation, Chaos Studio |
 | CI/CD | Manually authored pipelines | Copilot in Actions, OIDC + Azure Deployment Environments, AI-gated deployment agent |
-| Operations | Manual dashboards, runbooks | Copilot in Azure, Azure Monitor agent automation, AI-driven remediation agents |
-| Incident Response | Email threads, postmortems | AI-drafted RCA, GitHub Issue automation, Azure Service Health → GitHub integration |
+| Operations | Manual dashboards, runbooks | Copilot in Azure, **Azure SRE Agent** (autonomous investigation + remediation), Azure Monitor agent automation |
+| Incident Response | Email threads, postmortems | **Azure SRE Agent** (RCA + resolution), AI-drafted postmortems, GitHub Issue automation, Azure Service Health → GitHub integration |
 
 ---
 
@@ -326,8 +498,8 @@ Work through the stages in order. Each phase is independently valuable and build
 1. **Foundation (Week 1–2):** Enable GitHub Copilot organization-wide. Add `.github/copilot-instructions.md`. Configure GHAS (CodeQL + Secret Scanning). Set up Workload Identity Federation between GitHub and Azure.
 2. **Developer Experience (Week 3–4):** Enable Copilot Coding Agent. Configure GitHub Codespaces with `devcontainer.json`. Set up GitHub Environments with OIDC-authenticated deployments to Azure.
 3. **AI-Assisted Review and Testing (Week 5–6):** Enable Copilot PR Summaries and Code Review. Integrate Azure Load Testing into the release pipeline. Schedule Chaos Studio experiments against staging.
-4. **Agent-Driven Operations (Week 7–10):** Deploy Azure AI Foundry project. Build the alert-to-issue Logic App. Deploy the remediation Azure Function. Enable Copilot in Azure for the operations team.
-5. **Closed-Loop Automation (Week 11–12):** Deploy the requirements-gathering Foundry agent. Enable incident-to-backlog GitHub Actions workflow. Configure the postmortem digest workflow. Connect Microsoft Defender for DevOps to Defender for Cloud.
+4. **Agent-Driven Operations (Week 7–10):** Deploy Azure AI Foundry project. Enable Azure SRE Agent in Review mode against the staging subscription. Build the alert-to-issue Logic App. Enable Copilot in Azure for the operations team.
+5. **Closed-Loop Automation (Week 11–12):** Promote Azure SRE Agent to Autonomous mode for approved remediation actions. Deploy the requirements-gathering Foundry agent. Enable incident-to-backlog GitHub Actions workflow. Configure the postmortem digest workflow. Connect Microsoft Defender for DevOps to Defender for Cloud.
 
 ---
 
