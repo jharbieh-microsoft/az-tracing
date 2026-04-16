@@ -305,6 +305,11 @@ h2 {
   font-size: 0.73rem;
 }
 
+.alert.sev0 {
+  border-left-color: var(--bad);
+  box-shadow: 0 0 8px rgba(255, 107, 122, 0.35);
+}
+
 .alert.sev1 {
   border-left-color: var(--bad);
 }

@@ -1,0 +1,48 @@
+name: Simulation App CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'simulation-app/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'simulation-app/**'
+
+jobs:
+  lint-and-build:
+    name: Lint and Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: simulation-app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: simulation-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check and build
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation-app-dist
+          path: simulation-app/dist
+          retention-days: 7

@@ -218,7 +218,17 @@ function App() {
                 key={node.id}
                 className={`node ${node.status} ${selectedNodeId === node.id ? 'selected' : ''}`}
                 transform={`translate(${node.x}, ${node.y})`}
+                role="button"
+                tabIndex={0}
+                aria-label={`${node.label} – ${node.status}`}
+                aria-pressed={selectedNodeId === node.id}
                 onClick={() => setSelectedNodeId(node.id)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setSelectedNodeId(node.id)
+                  }
+                }}
               >
                 <circle r="26" />
                 <text y="52" textAnchor="middle">{node.label}</text>
