@@ -1,12 +1,10 @@
 import { defineConfig } from 'vite'
-import react, { reactCompilerPreset } from '@vitejs/plugin-react'
-import babel from '@rolldown/plugin-babel'
+import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    babel({ presets: [reactCompilerPreset()] })
   ],
   // Security headers for local development. For production, configure equivalent
   // headers at the hosting layer (e.g., Azure Static Web Apps staticwebapp.config.json,

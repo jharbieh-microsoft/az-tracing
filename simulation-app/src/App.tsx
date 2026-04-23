@@ -189,7 +189,7 @@ function App() {
           <span>Incident Intensity: {intensity}%</span>
           <input type="range" min={0} max={100} value={intensity} onChange={(event) => setIntensity(Number(event.target.value))} />
         </label>
-        <button className="toggle" onClick={() => setRunning((prev) => !prev)}>{running ? 'Pause Simulation' : 'Resume Simulation'}</button>
+        <button type="button" className="toggle" onClick={() => setRunning((prev) => !prev)}>{running ? 'Pause Simulation' : 'Resume Simulation'}</button>
       </section>
 
       <section className="content-grid">
