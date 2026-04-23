@@ -20,12 +20,7 @@ The repository now includes:
   - Data Center Virtual Machine
   - SaaS application integration
 - Deployment automation, troubleshooting, and validation assets for the demo
-
-## Recommended Reading Order
-
-1. [REQUIREMENTS.md](REQUIREMENTS.md) for the document index
-2. [BUSINESS_REQUIREMENTS.md](BUSINESS_REQUIREMENTS.md) for scope and success criteria
-3. [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md) for the target Azure architecture
+npm run dev
 4. [INGESTION_PIPELINE.md](INGESTION_PIPELINE.md) for source-to-workspace ingestion design
 5. [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) for rollout sequencing
 6. [DEMO_SOLUTION.md](DEMO_SOLUTION.md) for the end-to-end demonstration package
